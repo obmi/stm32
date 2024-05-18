@@ -1,0 +1,8 @@
+.settings
+CMSIS
+Debug
+Startup
+.cproject
+.project
+test Debug.launch
+
