@@ -8,11 +8,10 @@ void tim2init() {
 	TIM2->ARR = 1000000 - 1;
 	TIM2->CNT = 0;
 	TIM2->CR1 |= TIM_CR1_CEN;
-
 }
 
 void delay(uint32_t us) {
-    uint32_t start = TIM2->CNT;
+	uint32_t start = TIM2->CNT;
     while ((TIM2->CNT - start) < us);
 }
 
@@ -51,10 +50,29 @@ void Set24MHz(void) {
 
 
 void ledinit(){
-		RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-		GPIOC->MODER |= GPIO_MODER_MODER13_0;
-		GPIOC->OTYPER = 0b00;
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+	GPIOC->MODER |= GPIO_MODER_MODER13_0;
+	GPIOC->OTYPER = 0b00;
 }
 
+void buttoninit(){
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	GPIOA->MODER |= 0b00;
+}
 
+void EXTI_init(){
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+	GPIOA->OSPEEDR |= 0b11;
 
+	EXTI->IMR |= EXTI_IMR_IM0;
+	EXTI->RTSR|= EXTI_RTSR_TR0;
+	EXTI->FTSR|= EXTI_FTSR_TR0;
+
+	NVIC_EnableIRQ(EXTI0_IRQn);
+
+}
+
+void EXTI0_IRQHandler(){
+	GPIOC->ODR ^= GPIO_ODR_OD13;
+	EXTI->PR |= EXTI_PR_PR0;
+}
