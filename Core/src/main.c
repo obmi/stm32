@@ -4,28 +4,30 @@
 
 
 
-int main(void){
 
+int main(void) {
+
+
+    ledinit();
+    USART2_init();
 	SystemCoreClockUpdate();
-	Set24MHz();
-	usart2_init();
-	USART2_IRQHandler();
-//	tim2init();
-//	ledinit();
+
+	USART2_send();
+//	Set24MHz();
+//	USART2_IRQHandler();
+//	tim2init(1);
 //	buttoninit();
 //	EXTI_init();
 //	EXTI0_IRQHandler();
 
 
-	while(1){
-//		GPIOC->ODR |= GPIO_ODR_OD13;
-//		delay(1000000);
+    while (1) {
 
-		usart2_send(0x43);
+        if (USART2->SR & USART_SR_RXNE) {
+            uint8_t data = USART2->DR;
+            toggle_LED();
 
-
-	}
-
-
-
+            USART2_send();
+        }
+    }
 }

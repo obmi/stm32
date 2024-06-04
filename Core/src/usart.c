@@ -1,64 +1,27 @@
 #include "usart.h"
 
-static uint8_t data_to_send;
+void USART2_init() {
 
-void usart2_init(){
-
-	RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
-
-	GPIOA->MODER |= GPIO_MODER_MODE2_1;						//TX, Alternate function mode
-	GPIOA->MODER |= GPIO_MODER_MODE3_1;						//RX, Alternate function mode
-
-	GPIOA->AFR[0] |= (1 << 10) | (1 << 9) | (1 << 8);		//	USART2_TX is AF07
-	GPIOA->AFR[0] |= (1 << 14) | (1 << 13) | (1 << 12);		//	USART2_RX is AF07
-
-	USART2->BRR = 0x9C4; 									//	24MHz, baud rate = 9600
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    RCC->APB1ENR |= RCC_APB1ENR_USART2EN;
 
 
-//	USART2->CR1 |= USART_CR1_RXNEIE							//RXNE interrupt enable. Interrupt is generated if RXNE = 1 (Received data is ready to be read)
-//				| USART_CR1_TXEIE;							//TXE interrupt enable.	 Interrupt is generated if TXE = 1 	(Data is transferred to the shift register)
-
-	USART2->CR1 |= USART_CR1_UE								//USART enable
-				| USART_CR1_RE 								//Receiver enable
-				| USART_CR1_TE;								//Transmitter enable
+    GPIOA->MODER &= ~(GPIO_MODER_MODER2 | GPIO_MODER_MODER3);
+    GPIOA->MODER |= GPIO_MODER_MODER2_1 | GPIO_MODER_MODER3_1;
+    GPIOA->AFR[0] |= (7 << 12) | (7 << 8); // PA2 и PA3 в AF7 (USART2)
 
 
-
-
-
-	NVIC_EnableIRQ(USART2_IRQn);
-
+    USART2->BRR = 0x0683; // Настройка на 9600 бод при частоте шины 16 МГц
+    USART2->CR1 |= USART_CR1_RE | USART_CR1_TE;
+    USART2->CR1 |= USART_CR1_UE;
 
 }
 
-void usart2_send(uint8_t data){
-	data_to_send = data;
-	USART2->CR1 |= USART_CR1_TXEIE;
+void USART2_send(){
+	while (!(USART2->SR & USART_SR_TXE));
+	USART2->DR = 1;
+	while (!(USART2->SR & USART_SR_TC));
 }
-
-void usart2_read(){
-
-}
-
-void USART2_IRQHandler(){
-
-	if(USART2->SR & USART_SR_TXE){
-		USART2->DR = data_to_send;
-		USART2->CR1 &= ~USART_CR1_TXEIE;
-	}
-
-
-	if(USART2->SR & USART_SR_RXNE){
-
-
-	}
-
-}
-
-
-
-
 
 
 

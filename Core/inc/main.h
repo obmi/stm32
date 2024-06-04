@@ -1,13 +1,17 @@
 #include <stm32f4xx.h>
 
 
-void tim2init() {
+void tim2init(uint8_t psc) {
 
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	TIM2->PSC = SystemCoreClock / 1000000 - 1;
-	TIM2->ARR = 1000000 - 1;
+	TIM2->ARR = 1000000*psc - 1;
 	TIM2->CNT = 0;
 	TIM2->CR1 |= TIM_CR1_CEN;
+}
+
+void toggle_LED(void) {
+    GPIOC->ODR ^= (1 << 13);
 }
 
 void delay(uint32_t us) {
@@ -50,9 +54,13 @@ void Set24MHz(void) {
 
 
 void ledinit(){
-	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
-	GPIOC->MODER |= GPIO_MODER_MODER13_0;
-	GPIOC->OTYPER = 0b00;
+
+	    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN;
+
+	    GPIOC->MODER &= ~(GPIO_MODER_MODER13);
+	    GPIOC->MODER |= GPIO_MODER_MODER13_0;
+
+	    GPIOC->ODR &= ~(1 << 13);
 
 }
 
