@@ -2,5 +2,4 @@
 
 
 void USART2_init();
-void USART2_send();
-//void USART2_IRQHandler();
+void USART2_IRQHandler();

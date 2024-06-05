@@ -10,7 +10,7 @@ void tim2init(uint8_t psc) {
 	TIM2->CR1 |= TIM_CR1_CEN;
 }
 
-void toggle_LED(void) {
+void toggle_LED() {
     GPIOC->ODR ^= (1 << 13);
 }
 
@@ -19,7 +19,7 @@ void delay(uint32_t us) {
     while ((TIM2->CNT - start) < us);
 }
 
-void Set24MHz(void) {
+void Set24MHz() {
 
     RCC->CR |= RCC_CR_HSION;
     while ((RCC->CR & RCC_CR_HSIRDY) == 0);

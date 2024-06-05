@@ -1,18 +1,19 @@
-#include "main.h"
 #include "usart.h"
+#include "ringbuffer.h"
+#include "commands.h"
+#include "main.h"
 
-
-
+uint8_t rx_buffer[64];
 
 
 int main(void) {
 
-
+	SystemCoreClockUpdate();
     ledinit();
     USART2_init();
-	SystemCoreClockUpdate();
+    buffer_init(&rx_ring_buf, rx_buffer, 64);
 
-	USART2_send();
+
 //	Set24MHz();
 //	USART2_IRQHandler();
 //	tim2init(1);
@@ -21,13 +22,10 @@ int main(void) {
 //	EXTI0_IRQHandler();
 
 
-    while (1) {
+    while(1){
+    	proccess();
 
-        if (USART2->SR & USART_SR_RXNE) {
-            uint8_t data = USART2->DR;
-            toggle_LED();
 
-            USART2_send();
-        }
     }
+
 }
