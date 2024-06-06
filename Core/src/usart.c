@@ -1,6 +1,9 @@
 #include "usart.h"
 #include "ringbuffer.h"
 
+extern RingBuffer rx_ring_buf;
+
+
 void USART2_init() {
 
     RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;

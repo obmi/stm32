@@ -14,9 +14,9 @@ void toggle_LED() {
     GPIOC->ODR ^= (1 << 13);
 }
 
-void delay(uint32_t us) {
+void delay(uint32_t ms) {
 	uint32_t start = TIM2->CNT;
-    while ((TIM2->CNT - start) < us);
+    while ((TIM2->CNT - start) < ms*1000);
 }
 
 void Set24MHz() {
@@ -60,7 +60,7 @@ void ledinit(){
 	    GPIOC->MODER &= ~(GPIO_MODER_MODER13);
 	    GPIOC->MODER |= GPIO_MODER_MODER13_0;
 
-	    GPIOC->ODR &= ~(1 << 13);
+	    GPIOC->ODR |= (1 << 13);
 
 }
 
