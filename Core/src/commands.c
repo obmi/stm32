@@ -2,16 +2,20 @@
 #include "ringbuffer.h"
 #include "stdbool.h"
 
-	//	0xAB	0x01	T0		T1		#свет.	XOR
-	// 	0xAB 	0x01 	0x03 	0xE8 	0x0D 	0xAF
+
+	//	0xAB	0x01	T0		T1		#свет.	XOR		//freq, xor w/o t0t1 = A7
+	// 	AB		01	 	03 		E8		0D 		4C		//1000ms
+	//	AB		01		00		C8		0D		6F		//200ms
+	//	AB		01		0B		B8		0D		14		//3000ms
 
 	//	0xAB	0x02 	Сост.	X		#свет.	XOR
+	// 	AB		02		0		X		0D		A4		//off
+	// 	AB 		02		1		X		0D		A5		//on
 
 extern RingBuffer rx_ring_buf;
 
-
-uint8_t flag = 0;
-uint8_t duration;
+uint8_t state;
+uint32_t duration = 0;
 uint8_t xor_sum = 0;
 uint8_t command_data[6] = {0}; // array for command
 
@@ -19,59 +23,81 @@ uint8_t command_data[6] = {0}; // array for command
 
 void proccessrx(void) {
 
-	buffer_get_from_front(&rx_ring_buf, &command_data[0]);//если в буффере чтото есть то начинаем считывать
-	buffer_get_from_front(&rx_ring_buf, &command_data[1]);
+	for (int i = 0; i < 6; i++) {
+		if (buffer_get_from_front(&rx_ring_buf, &command_data[i]) == 0) {
+			delay(10);
+		} else {
+			break; // if empty - break
+		}
+	}
 
-
-        if(command_data[0] > 3 && command_data[1] > 4){
-        	flag = 1;
-        }
-        buffer_flush(&rx_ring_buf);
-
-//        flag = 0;
-
-
-//        xor_sum = 0;
-//        for (int i = 0; i < 5; i++) {		//count xor
-//            xor_sum ^= command_data[i];
-//        }
-
-        // Проверяем корректность команды
-//        if (xor_sum == command_data[5]) {	//if xor = xor
-//
-//        	if (command_data[1] == 0x01) {
-//        		toggle_LED();
-//        		flag = 1;
-//        		duration = (command_data[2] << 8) | command_data[3];
-//        		duration *= 10; 				// 1bit = 10ms
-//
-//        	}
-//
-//        	if (command_data[1] == 0x02) {
-//        		flag = 2;
-//
-//
-//        	}
-//
-//            // Очищаем данные команды
-//            for (int i = 0; i < 5; i++) {
-//                command_data[i] = 0;
-//            }
-//            buffer_flush(&rx_ring_buf);
-//
-//        }
+	buffer_flush(&rx_ring_buf);
 
 }
 
 void process_command() {
 
-//	if(flag == 1) {
-//
-//		delay(duration);
-//		toggle_LED();
-//
-//	}
-	if(flag > 0) {
-		toggle_LED();
+	if(command_data[0] > 0) {
+		for (uint8_t var = 0; var < 6; var++) {
+
+			while (!(USART2->SR & USART_SR_TXE));
+
+			USART2->DR = command_data[var];
+
+			while (!(USART2->SR & USART_SR_TC));
+			delay(10);
+		}
+
+		//if xor = xor
+		if(command_data[1] == 0x01) {
+			uint8_t T0 = command_data[2];
+			uint8_t T1 = command_data[3];
+			xor_sum = 0;
+			for (int var = 0; var < 5; var++) {
+				xor_sum ^= command_data[var];
+			}
+			if (xor_sum == command_data[5]) {
+				//body freq
+				duration = 0;
+				duration = (T0 << 8) | T1;
+
+
+			}
+		}
+		if(command_data[1] == 0x02) {
+			xor_sum = 0;
+			uint8_t skip = 3;
+			for (int var = 0; var < 5; var++) {
+				if(var != skip) {
+					xor_sum ^= command_data[var];
+				}
+			}
+			if (xor_sum == command_data[5]) {
+				if(command_data[2] == 0x01) {
+					//body ledon
+					state = 1;
+				}
+				if(command_data[2] == 0x00) {
+					//body ledoff
+					state = 0;
+				}
+			}
+
+		}
+
+		for (int var = 0; var < 6; var++) {
+			command_data[var] = 0;
+		}
+
 	}
+
+	if(state == 0){
+		LED_OFF();
+	}
+	if(state == 1){
+		toggle_LED();
+		delay(duration);
+	}
+
+
 }

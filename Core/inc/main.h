@@ -5,13 +5,21 @@ void tim2init(uint8_t psc) {
 
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
 	TIM2->PSC = SystemCoreClock / 1000000 - 1;
-	TIM2->ARR = 1000000*psc - 1;
+	TIM2->ARR = 0xFFFFFFF - 1;
 	TIM2->CNT = 0;
 	TIM2->CR1 |= TIM_CR1_CEN;
 }
 
 void toggle_LED() {
     GPIOC->ODR ^= (1 << 13);
+}
+
+void LED_OFF(){
+	GPIOC->ODR |= (1 << 13);
+}
+
+void LED_ON(){
+	GPIOC->ODR &= ~(1 << 13);
 }
 
 void delay(uint32_t ms) {
