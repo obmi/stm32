@@ -25,7 +25,7 @@ void proccessrx(void) {
 
 	for (int i = 0; i < 6; i++) {
 		if (buffer_get_from_front(&rx_ring_buf, &command_data[i]) == 0) {
-			delay(10);
+			delay(5);
 		} else {
 			break; // if empty - break
 		}
@@ -45,7 +45,7 @@ void process_command() {
 			USART2->DR = command_data[var];
 
 			while (!(USART2->SR & USART_SR_TC));
-			delay(10);
+			delay(5);
 		}
 
 		//if xor = xor
