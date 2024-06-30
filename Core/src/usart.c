@@ -72,7 +72,11 @@ void USART2_send(uint8_t data) {
 
 uint8_t USART2_read() {
     while (!(USART2->SR & USART_SR_RXNE));
-    return USART2->DR;
+    uint8_t rx;
+    rx = USART2->DR;
+    while (!(USART2->SR & USART_SR_TC));
+
+    return rx;
 }
 
 void USART2_setbaudrate(uint32_t mode){

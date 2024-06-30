@@ -1,5 +1,6 @@
 #include <stm32f4xx.h>
 
+
 void tim2init() {
 
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
@@ -142,4 +143,76 @@ void EXTI_init(){
 void EXTI0_IRQHandler(){
 	GPIOC->ODR ^= GPIO_ODR_OD13;
 	EXTI->PR |= EXTI_PR_PR0;
+}
+
+
+void TIM3_init()
+{
+
+//	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
+//
+//	TIM3->PSC = 31;  // Предделитель таймера (84 MHz / (83 + 1) = 1 MHz)
+//	TIM3->ARR = 1000;
+//
+//	TIM3->CCMR1 |= (6 << 4);
+//	TIM3->CCMR1 |=	TIM_CCMR1_OC1PE;
+//
+//	TIM3->CCER |= TIM_CCER_CC1E;
+//
+//	TIM3->CCR1 = 0;
+//
+//	TIM3->CR1 |= TIM_CR1_CEN;
+	RCC->APB1ENR |=RCC_APB1ENR_TIM3EN; //тактироване TIM3
+
+//	    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;//включаем тактирование System configuration controller
+	    TIM3->CR1 &= ~TIM_CR1_UDIS; // событие update?
+	    TIM3->CR1 &= ~TIM_CR1_URS; // генерировать прерывания только при переполнении счетчика таймера
+	    TIM3->CR1 &= ~TIM_CR1_OPM; //one plus mode?
+	    TIM3->CR1 &= ~TIM_CR1_DIR; // upcounter
+	    TIM3->CR1 &= ~TIM_CR1_CMS_Msk; //выравнивание по краю
+	    TIM3->CR1 |= TIM_CR1_ARPE; //автоматическая перезагрузка
+	    TIM3->CR1 &= ~TIM_CR1_CKD_Msk; // prescaler off
+	    TIM3->DIER |= TIM_DIER_UIE; // Update interrupt enable
+
+
+
+
+
+	        TIM3->CCER |= TIM_CCER_CC1E; // включение 3-го канала в режиме захвт-сравнение
+	        TIM3->CR1 |= TIM_CR1_ARPE; //зачем то нужно
+	        TIM3->CCMR1 &= ~TIM_CCMR1_OC1M_Msk;
+	        TIM3->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2; // mode PWM1
+	        TIM3->CCMR1 |= TIM_CCMR1_OC1PE; // preload ARR
+
+	        TIM3->PSC = 32-1; //10kHz
+	        TIM3->ARR = 1000-1;
+//	        TIM3->CCR2 = 10;
+
+	    NVIC_EnableIRQ(TIM3_IRQn); // разрешаем прерывания по таймеру 3
+	    TIM3->EGR |= TIM_EGR_UG; //генерация событий?
+	    TIM3->CR1 |= TIM_CR1_CEN; //включение счетчика таймера
+
+}
+
+void Port_AltFunc_Init()
+    {
+
+	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+
+	GPIOA->MODER &= ~(GPIO_MODER_MODER6);
+	GPIOA->MODER |= GPIO_MODER_MODER6_1;
+
+	GPIOA->AFR[0] &= ~(0xF << (6 * 4));
+
+	GPIOA->AFR[0] |= (2 << (6 * 4));
+
+    }
+
+void TIM3_IRQHandler(){
+    if(READ_BIT(TIM3->SR, TIM_SR_UIF))
+    {
+        TIM3->SR &= ~TIM_SR_UIF_Msk; // сброс флага прерывания
+    }
+
+
 }

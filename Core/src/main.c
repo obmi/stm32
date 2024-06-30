@@ -9,7 +9,7 @@ RingBuffer rx_ring_buf;
 
 
 uint8_t status;
-uint8_t dt[8];		//ds18b20 raw received data
+uint8_t dt[16];		//ds18b20 raw received data
 
 int main(void) {
 	SystemInit();
@@ -17,32 +17,55 @@ int main(void) {
     ledinit();
 //    USART2_init();
     USART2_halfduplex_init();
-//    port_init();
 	USART2_IRQHandler();
-	tim2init();
+	Port_AltFunc_Init();
+//	tim2init();
 //	TIM2_IRQHandler();
     buffer_init(&rx_ring_buf, &rx_buffer, 256);
 	Set42MHz();
 //	buttoninit();
 //	EXTI_init();
 //	EXTI0_IRQHandler();
-	ds18b20_init();
+//	ds18b20_init();
 
+	TIM3_init();
+
+	TIM3_IRQHandler();
 
     while(1){
+    	// Изменение яркости светодиода
+    	        for (uint32_t i = 0; i <= 1000; i++) {
+    	            TIM3->CCR1 = i;  // Установка коэффициента заполнения
+    	            for (uint32_t j = 0; j < 1000; j++);  // Небольшая задержка
+
+    	            // Копирование состояния PA6 на PC13
+    	            if (GPIOA->IDR & GPIO_IDR_ID6) {
+    	                GPIOC->BSRR = GPIO_BSRR_BS13;
+    	            } else {
+    	                GPIOC->BSRR = GPIO_BSRR_BR13;
+    	            }
+    	        }
+    	        for (uint32_t i = 1000; i > 0; i--) {
+    	            TIM3->CCR1 = i;  // Установка коэффициента заполнения
+    	            for (uint32_t j = 0; j < 1000; j++);  // Небольшая задержка
+
+    	            // Копирование состояния PA6 на PC13
+    	            if (GPIOA->IDR & GPIO_IDR_ID6) {
+    	                GPIOC->BSRR = GPIO_BSRR_BS13;
+    	            } else {
+    	                GPIOC->BSRR = GPIO_BSRR_BR13;
+    	            }
+    	        }
+
 
 /* =============== lab2 ============== */
-    	ds18b20_measure();
-    	delay(150);
-    	ds18b20_readscratchpad(dt);
-    	ow_receive(dt, 8);
-
-//    	for (uint8_t i = 0; i < 8; i++) {
-//			USART2_send(dt[i]);
-//			delay(2000);
-//		}
-
-    	delay(1000);
+//    	ds18b20_measure();
+//    	delay(150);
+//    	ds18b20_readscratchpad(dt);
+//
+//
+//
+//    	delay(1000);
 /* =============== rk2 =============== */
 //    	proccessrx();
 //    	process_command();

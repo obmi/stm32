@@ -174,14 +174,23 @@ void ds18b20_readscratchpad(uint8_t *data){
 	ds18b20_reset();
 	ds18b20_writebyte(0xCC); //skiprom
 	ds18b20_writebyte(0xBE); //read scratchpad
+	delay(100);
 
 	uint8_t *p=(uint8_t *)data;
-	for (uint8_t i = 0; i < 8; i++, p++) {
-		data[i] = ds18b20_readbyte();
-		*p=ds18b20_readbit();
 
-	}
-
+//	*data = ds18b20_readbit();
+//
+//	for (uint8_t i = 0; i < 16; i++, p++) {
+//
+//
+//		*p = ds18b20_readbit();
+//		delay(10);
+//
+//	}
+	*p = ds18b20_readbit();
+	p++;
+	*p = ds18b20_readbit();
+	p++;
 
 
 
