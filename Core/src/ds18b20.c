@@ -14,9 +14,6 @@
 
 extern RingBuffer rx_ring_buf;
 
-uint8_t store[6] = {0};
-
-
 
 void ds18b20_pin_output() {
     GPIOA->MODER &= ~(GPIO_MODER_MODER2);
@@ -40,26 +37,6 @@ void ds18b20_write_high() {
 
 uint8_t ds18b20_reset() {
 
-
-//	uint16_t presence = 13;
-//
-//	ds18b20_pin_output();
-//	ds18b20_write_low();
-//	delay_us(480); //530us
-//	ds18b20_pin_input();
-//	delay_us(50);
-//
-//
-//	presence = GPIOA->IDR & GPIO_IDR_ID2;
-//	delay(1);
-//
-//	if(presence == 0){
-//		toggle_LED();
-//	}
-//
-//
-//	return (presence ? 1 : 0);
-
 	USART2_setbaudrate(0xD05);				//9600
 	delay_us(500);
 	USART2_send(0xF0);						//reset condition timing
@@ -75,60 +52,18 @@ uint8_t ds18b20_readbit(){
 	delay(1);
 
 	uint8_t bit;
-//
-//	ds18b20_pin_output();
-//	ds18b20_write_low();
-//
-//	delay_us(3); //5
-//
-//	ds18b20_pin_input();
-//
-//	delay_us(7); //9.5
-//
-//	bit = (GPIOA->IDR & GPIO_IDR_ID2 ? 1 : 0);
-//
-//
-//	delay_us(40); //45
 
 	ds18b20_writebit(0xFF); //low for 8us , then master read
+	delay_us(3);
 	bit = USART2_read();
 
 
 	return bit;
-}
 
-
-
-void ow_receive(void *buf, unsigned int size)
-{
-    uint8_t *p=(uint8_t *)buf;
-    for(unsigned int i=0; i<size; i++, p++)
-        *p=ds18b20_readbit();
-}
-
-
-uint8_t ds18b20_readbyte(){
-	uint8_t data = 0;
-	for (uint8_t i = 0; i <= 7; i++){
-		data += ds18b20_readbit() << i;
-	}
-
-	return data;
 }
 
 
 void ds18b20_writebit(uint8_t bit){
-
-//	ds18b20_pin_output();
-//	ds18b20_write_low();
-//
-//	delay_us(bit ? 1 : 65); // 3:67
-//
-//	ds18b20_pin_input();
-//
-//	delay_us(bit ? 65 : 1);
-
-
 
 	USART2_send(bit ? 0xFF : 0x00);				//ff - send1 timing : 00 - send0 timing
 	while (!(USART2->SR & USART_SR_TC));
@@ -169,34 +104,36 @@ void ds18b20_measure(){
 }
 
 
-void ds18b20_readscratchpad(uint8_t *data){
+
+
+uint8_t ds18b20_readbyte() {
+
+	uint8_t dat = 0;
+
+	    for (int i = 0; i < 8; i++) {
+
+	        USART2->DR = 0xFF;
+	        while (!(USART2->SR & USART_SR_TC));
+	        while (!(USART2->SR & USART_SR_RXNE));
+
+	        dat >>= 1;
+	        if (USART2->DR == 0xFF) {
+	            dat |= 0x80;  // устанавливаем бит 1
+	        }
+	    }
+	    return dat;
+}
+
+void ds18b20_readscratchpad(uint8_t *data) {
 
 	ds18b20_reset();
 	ds18b20_writebyte(0xCC); //skiprom
 	ds18b20_writebyte(0xBE); //read scratchpad
-	delay(100);
 
-	uint8_t *p=(uint8_t *)data;
-
-//	*data = ds18b20_readbit();
-//
-//	for (uint8_t i = 0; i < 16; i++, p++) {
-//
-//
-//		*p = ds18b20_readbit();
-//		delay(10);
-//
-//	}
-	*p = ds18b20_readbit();
-	p++;
-	*p = ds18b20_readbit();
-	p++;
-
-
-
+	for (int i = 0; i < 2; i++) {
+		data[i] = ds18b20_readbyte();
+	}
 
 }
-
-
 
 

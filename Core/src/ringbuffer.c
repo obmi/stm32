@@ -1,7 +1,7 @@
 	#include "ringbuffer.h"
 
 
-	void buffer_init(RingBuffer* buf, uint8_t* buffer_array, uint16_t size) {
+	void buffer_init(RingBuffer *buf, uint8_t *buffer_array, uint16_t size) {
 		buf->buffer = buffer_array;
 		buf->size = size;
 		buf->head = 0;

@@ -4,6 +4,30 @@
 extern RingBuffer rx_ring_buf;
 
 
+void USART1_init() {
+
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
+    RCC->APB2ENR |= RCC_APB2ENR_USART1EN;
+
+
+    GPIOA->MODER &= ~(GPIO_MODER_MODER9 | GPIO_MODER_MODER10);
+    GPIOA->MODER |= GPIO_MODER_MODER9_1 | GPIO_MODER_MODER10_1;
+
+    GPIOA->AFR[1] |= (7 << 8) | (7 << 4); // PA9 и PA10 в AF7 (USART1)
+
+
+    USART1->BRR = 0x116; //115200
+//  USART1->BRR = 0xD05; //9600
+
+    USART1->CR1 |= USART_CR1_TE;
+
+    USART1->CR1 |= USART_CR1_UE;
+}
+
+void USART1_send(uint8_t data) {
+    while (!(USART1->SR & USART_SR_TXE));
+    USART1->DR = data;
+}
 
 void USART2_halfduplex_init() {
 

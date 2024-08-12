@@ -17,5 +17,3 @@ void ds18b20_pin_input();
 void ds18b20_write_low();
 void ds18b20_write_high();
 
-void transmitdata();
-void ow_receive(void *buf, unsigned int size);

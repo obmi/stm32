@@ -8,3 +8,5 @@ void USART2_IRQHandler();
 void USART2_send(uint8_t data);
 uint8_t USART2_read();
 
+void USART1_init();
+void USART1_send(uint8_t data);

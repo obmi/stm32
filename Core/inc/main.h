@@ -1,6 +1,7 @@
 #include <stm32f4xx.h>
 
 
+
 void tim2init() {
 
 	RCC->APB1ENR |= RCC_APB1ENR_TIM2EN;
@@ -8,8 +9,14 @@ void tim2init() {
 	TIM2->ARR = 2000 - 1;
 	TIM2->CNT = 0;
 	TIM2->CR1 |= TIM_CR1_CEN;
+
 }
 
+void TIM2_IRQHandler(){
+	if(READ_BIT(TIM2->SR, TIM_SR_UIF)) {
+		TIM2->SR &= ~TIM_SR_UIF_Msk;
+	}
+}
 
 void toggle_LED() {
     GPIOC->ODR ^= (1 << 13);
@@ -50,32 +57,11 @@ void port_init(){
 
 }
 
-void takecontrol(){
 
 
-	GPIOA->MODER &= ~(GPIO_MODER_MODER10);
-	GPIOA->MODER |= (GPIO_MODER_MODER10_0); // Установка как выход
-	GPIOA->OTYPER |= GPIO_OTYPER_OT10;
 
 
-}
-
-void returncontrol(){
-
-
-	GPIOA->MODER &= ~(GPIO_MODER_MODER2);
-
-	GPIOA->MODER |= GPIO_MODER_MODER2_1; 	//alt.func
-
-	GPIOA->OTYPER |= GPIO_OTYPER_OT2;		//opendrain
-
-	GPIOA->AFR[0] |= (7 << 8);				//AF7 - usart2
-
-
-}
-
-
-void Set42MHz() {
+void Set32MHz() {
 
     RCC->CR |= RCC_CR_HSION;
     while ((RCC->CR & RCC_CR_HSIRDY) == 0);
@@ -149,6 +135,8 @@ void EXTI0_IRQHandler(){
 void TIM3_init()
 {
 
+	/* =============== PWM ============== */
+
 //	RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;
 //
 //	TIM3->PSC = 31;  // Предделитель таймера (84 MHz / (83 + 1) = 1 MHz)
@@ -195,6 +183,8 @@ void TIM3_init()
 }
 
 void Port_AltFunc_Init()
+
+/* =============== LED ============== */
     {
 
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN;
